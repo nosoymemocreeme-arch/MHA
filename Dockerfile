@@ -2,17 +2,23 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-RUN apk add --no-cache git curl unzip
+# Instala herramientas necesarias
+RUN apk add --no-cache git wget unzip
 
+# Clona SillyTavern principal
 RUN git clone https://github.com/SillyTavern/SillyTavern .
 
-RUN npm install --no-optional --legacy-peer-deps --force
+# Instala dependencias con fixes
+RUN npm install --no-optional --legacy-peer-deps --force --ignore-scripts
 
-# Para WebSearch, usa curl + unzip en lugar de git clone (evita auth)
-RUN curl -L -o main.zip https://github.com/SillyTavern/SillyTavern-WebSearch/archive/refs/heads/main.zip && \
-    unzip -o main.zip && \
-    mv SillyTavern-WebSearch-main extensions/WebSearch && \
-    rm -rf SillyTavern-WebSearch-main main.zip
+# Descarga WebSearch ZIP con wget + user-agent (evita rate limit/HTML error)
+RUN wget --user-agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36" -O main.zip https://github.com/SillyTavern/SillyTavern-WebSearch/archive/refs/heads/main.zip && \
+    ls -l main.zip && \
+    file main.zip && \
+    unzip -q -o main.zip -d temp && \
+    ls -l temp && \
+    mv temp/SillyTavern-WebSearch-main extensions/WebSearch && \
+    rm -rf temp main.zip
 
 EXPOSE 8000
 
